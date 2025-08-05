@@ -13,14 +13,14 @@ const PhotoPreviewSection = ({
         <SafeAreaView style={styles.container }>
             <View style={styles.box}>
                 <Image style={styles.previewContainer}
-                    source={{uri: 'data/image/jpg:base64,'+ photo.base64}}
+                    source={{uri: 'data:image/jpg;base64,'+ photo.base64}}
                 >
 
                 </Image>
             </View>
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={handleRetakePhoto}> 
                     <FontAwesome name="trash-o" size={24} color="black" />         
 
                 </TouchableOpacity>
