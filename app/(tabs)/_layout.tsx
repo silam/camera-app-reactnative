@@ -44,11 +44,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="camera"
         options={{
-          title: 'camera',
+          title: 'Camera',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
 
+        <Tabs.Screen
+        name="bootimagelist"
+        options={{
+          title: 'Boot Images',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
 
     </Tabs>
   );

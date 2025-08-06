@@ -1,38 +1,26 @@
 import React from 'react';
-import { Image, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
-
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { CameraCapturedPicture } from 'expo-camera';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 
-const PhotoPreviewSection = ({
-    photo , 
-    handleRetakePhoto,
-    searchRWSBoots,
+
+const BootsImages = ({
+    photos 
 }:{
-    photo: CameraCapturedPicture; 
-    handleRetakePhoto: ()=> void;
-    searchRWSBoots: ()=> void;}) => (
+    photos: string; 
+    }) => (
         <SafeAreaView style={styles.container }>
+            
             <View style={styles.box}>
-                <Image style={styles.previewContainer}
+                {/* <Image style={styles.previewContainer}
                     source={{uri: 'data:image/jpg;base64,'+ photo.base64}}>
 
-                </Image>
+                </Image> */}
+                <Text  >
+                    {photos}
+                </Text>
             </View>
 
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={handleRetakePhoto}> 
-                    <FontAwesome name="trash-o" size={24} color="black" />         
-
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.button} onPress={searchRWSBoots} > 
-                    <MaterialCommunityIcons name="shoe-cleat" size={24} color="black" />     
-                </TouchableOpacity>
-
-            </View>
+            
         </SafeAreaView>
 );
 
@@ -45,6 +33,7 @@ const styles = StyleSheet.create(
             justifyContent: 'center'
         },
         box: {
+            flex: 1,
             borderRadius: 15,
             padding: 1,
             width: '95%',
@@ -74,4 +63,4 @@ const styles = StyleSheet.create(
     }
 
 )
-export default PhotoPreviewSection
+export default BootsImages

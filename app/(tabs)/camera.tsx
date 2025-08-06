@@ -1,15 +1,17 @@
+import BootsImages from '@/components/BootsImages';
 import PhotoPreviewSection from '@/components/PhotoPreviewSection';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useRef, useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import DataService from '../../services/DataService';
 
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
     const [photo, setPhoto] = useState<any>(null);
+    const [photos, setPhotos] = useState('');
 
     const cameraRef = useRef<CameraView | null>(null);
     
@@ -28,15 +30,11 @@ export default function Camera() {
     );
   }
 
-  function toggleCameraFacing() {
+  function toggleCameraFacing() 
+    {
 
-        setFacing(current => (current == 'back'?'front':'back'));
-
-
-   
-
-
-}
+        setFacing(current => (current === 'back'?'front':'back'));
+    }
 
   const handleTakePhoto = async ()=> {
      if (cameraRef.current) {
@@ -56,7 +54,20 @@ export default function Camera() {
     setPhoto(null);
   }
   
-  if ( photo) return <PhotoPreviewSection photo={photo} handleRetakePhoto={handleRetakePhoto}></PhotoPreviewSection>
+
+  const searchRWSBoots = ()=> {
+    // here callng API to return list of boots
+    DataService.setSharedData('Hello from Service');
+    setPhotos('Hello');
+  }
+
+
+  if ( photo) return <PhotoPreviewSection photo={photo} handleRetakePhoto={handleRetakePhoto}
+                        searchRWSBoots={searchRWSBoots}></PhotoPreviewSection>
+
+  if (photos) return <BootsImages photos={photos}>
+     
+  </BootsImages>
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
