@@ -1,24 +1,26 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text } from 'react-native';
 
 
 
 const BootsImages = ({
     photos 
 }:{
-    photos: string; 
+    photos: []; 
     }) => (
         <SafeAreaView style={styles.container }>
             
-            <View style={styles.box}>
-                {/* <Image style={styles.previewContainer}
-                    source={{uri: 'data:image/jpg;base64,'+ photo.base64}}>
+            <ScrollView>
 
-                </Image> */}
-                <Text  >
-                    {photos}
-                </Text>
-            </View>
+                {photos.map((item, index)=>
+                    (
+                        <Text key={index}>
+                            {item}
+                        </Text>
+                    ))
+                }
+                
+            </ScrollView>
 
             
         </SafeAreaView>
@@ -28,7 +30,7 @@ const styles = StyleSheet.create(
     {
         container: {
             flex: 1,
-            backgroundColor: 'black',
+            backgroundarrayColor: 'black',
             alignItems: 'center',
             justifyContent: 'center'
         },

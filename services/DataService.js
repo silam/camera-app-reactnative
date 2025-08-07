@@ -1,6 +1,6 @@
 // DataService.js
 class DataService {
-  sharedData = 'Initial Data';
+  sharedData = [];
 
   subscribers = [];
 

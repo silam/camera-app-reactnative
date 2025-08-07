@@ -20,13 +20,10 @@ export default function bootimagelist() {
       DataService.unsubscribe(callback);
     };
   }, []);
-  
+
   return (
     <View style={styles.container}>
-
-      {(photos == null || photos === '' || photos == undefined)? <BootsImages photos={'photos'} ></BootsImages> : <BootsImages photos={photos} ></BootsImages>}
-
-      
+      {(photos == null || photos.length === 0 || photos === undefined)? <BootsImages photos={[]} ></BootsImages> : <BootsImages photos={photos} ></BootsImages>}
     </View>
   );
 }

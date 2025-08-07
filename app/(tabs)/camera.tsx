@@ -2,7 +2,7 @@ import PhotoPreviewSection from '@/components/PhotoPreviewSection';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DataService from '../../services/DataService';
 
 
@@ -22,16 +22,22 @@ export default function Camera() {
     if ( photo != null && photo !== undefined)
     {
           try{
-          const response = await fetch(' http://localhost:7190/api/Prediction', {
+            console.log("photo = " + photo);
+            console.log("Base64 =  " + (photo.base64).split(',')[1]);
+            console.log(base64ToUint8Array((photo.base64).split(',')[1]));
+
+            const response = await fetch('https://aibootfinderapi20250807073013.azurewebsites.net/api/Prediction', {
             method: 'POST',
             headers : {
               'Content-Type': 'application/octet-stream',
             },
             
-            body: base64ToUint8Array(photo.base64) // or binary (Uint8Array)
+            body: base64ToUint8Array((photo.base64).split(',')[1]) // or binary (Uint8Array)
           });
           const data = await response.json();
+          console.log(data)
           setPhotos(data);
+          DataService.setSharedData(data);
         }
         catch(error) {
           console.error('Error fetching photos:', error);
@@ -43,15 +49,15 @@ export default function Camera() {
     
   } 
 
-  if (loading)
-  {
-    return <View style={styles.center}>
-      <ActivityIndicator size='large'>
+  // if (loading)
+  // {
+  //   return <View style={styles.center}>
+  //     <ActivityIndicator size='large'>
 
-      </ActivityIndicator>
-      <Text>Loading...</Text>
-    </View>
-  }
+  //     </ActivityIndicator>
+  //     <Text>Loading...</Text>
+  //   </View>
+  // }
   if (!permission) {
     // Camera permissions are still loading.
     return <View />;
