@@ -1,20 +1,57 @@
-import BootsImages from '@/components/BootsImages';
 import PhotoPreviewSection from '@/components/PhotoPreviewSection';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useRef, useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DataService from '../../services/DataService';
 
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
-    const [photo, setPhoto] = useState<any>(null);
-    const [photos, setPhotos] = useState('');
+  const [photo, setPhoto] = useState<any>(null);
+  
+  
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading]           = useState(true);
 
-    const cameraRef = useRef<CameraView | null>(null);
+  const cameraRef = useRef<CameraView | null>(null);
+  
+
+  const fetchPhotos = async () => {
+    if ( photo != null && photo !== undefined)
+    {
+          try{
+          const response = await fetch(' http://localhost:7190/api/Prediction', {
+            method: 'POST',
+            headers : {
+              'Content-Type': 'application/octet-stream',
+            },
+            
+            body: base64ToUint8Array(photo.base64) // or binary (Uint8Array)
+          });
+          const data = await response.json();
+          setPhotos(data);
+        }
+        catch(error) {
+          console.error('Error fetching photos:', error);
+        }
+        finally{
+          setLoading(false);
+        }
+    }
     
+  } 
+
+  if (loading)
+  {
+    return <View style={styles.center}>
+      <ActivityIndicator size='large'>
+
+      </ActivityIndicator>
+      <Text>Loading...</Text>
+    </View>
+  }
   if (!permission) {
     // Camera permissions are still loading.
     return <View />;
@@ -30,11 +67,40 @@ export default function Camera() {
     );
   }
 
-  function toggleCameraFacing() 
-    {
+  function base64ToBlob(base64 : string, contentType = 'image/jpeg') {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
 
-        setFacing(current => (current === 'back'?'front':'back'));
+    for (let i = 0; i < byteCharacters.length; i += 512) {
+      const slice = byteCharacters.slice(i, i + 512);
+      const byteNumbers = new Array(slice.length);
+      for (let j = 0; j < slice.length; j++) {
+        byteNumbers[j] = slice.charCodeAt(j);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
     }
+
+    return new Blob(byteArrays, { type: contentType });
+  }
+
+  function base64ToUint8Array(base64 : string) {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return bytes;
+  }
+
+  function toggleCameraFacing() 
+  {
+
+      setFacing(current => (current === 'back'?'front':'back'));
+  }
 
   const handleTakePhoto = async ()=> {
      if (cameraRef.current) {
@@ -47,6 +113,8 @@ export default function Camera() {
         const takedPhoto = await cameraRef.current.takePictureAsync(options);
 
         setPhoto(takedPhoto);
+
+        
     }
   };
 
@@ -58,16 +126,15 @@ export default function Camera() {
   const searchRWSBoots = ()=> {
     // here callng API to return list of boots
     DataService.setSharedData('Hello from Service');
-    setPhotos('Hello');
+    fetchPhotos();
+    // setPhotos('Hello');
   }
 
 
   if ( photo) return <PhotoPreviewSection photo={photo} handleRetakePhoto={handleRetakePhoto}
                         searchRWSBoots={searchRWSBoots}></PhotoPreviewSection>
 
-  if (photos) return <BootsImages photos={photos}>
-     
-  </BootsImages>
+  //if (photos) return <BootsImages photos={photos}></BootsImages>
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
@@ -89,6 +156,11 @@ export default function Camera() {
 }
 
 const styles = StyleSheet.create({
+  center: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
