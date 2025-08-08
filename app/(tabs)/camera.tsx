@@ -1,10 +1,10 @@
 import PhotoPreviewSection from '@/components/PhotoPreviewSection';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useRef, useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DataService from '../../services/DataService';
-
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -14,6 +14,8 @@ export default function Camera() {
   
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading]           = useState(true);
+  const [imageUri, setImageUri] = useState(null);
+
 
   const cameraRef = useRef<CameraView | null>(null);
   
@@ -22,18 +24,29 @@ export default function Camera() {
     if ( photo != null && photo !== undefined)
     {
           try{
-            console.log("photo = " + photo);
-            console.log("Base64 =  " + (photo.base64).split(',')[1]);
-            console.log(base64ToUint8Array((photo.base64).split(',')[1]));
+            
+            // android: photo = /9j/4AAQSkZJRgABAQAAAQABAAD/4gIoSUNDX1BST0ZJTEUAAQEAAAIYAAAAAAQwAABtbnRyUkdCIFhZWiAAAAAAAAAAAAAAAABh
+
+            console.log("photo = " + (photo.base64).substring(0,100));
+            //console.log("Base64 =  " + (photo.base64).split(',')[1]);
+            //console.log("Bytes = " + Uint8Array.fromBase64(photo.base64));
+            //const binaryData = atob(photo.base64); // Decode Base64 to binary
+            //const byteArray = new Uint8Array(binaryData.length); // Create binary array
+            // Calculate in bytes
+            let sizeInBytes = (photo.base64.length * 3) / 4 
+                              - (photo.base64.endsWith('==') ? 2 : photo.base64.endsWith('=') ? 1 : 0);
+
+            console.log("Size : " + sizeInBytes / (1024*1024));
 
             const response = await fetch('https://aibootfinderapi20250807073013.azurewebsites.net/api/Prediction', {
-            method: 'POST',
-            headers : {
-              'Content-Type': 'application/octet-stream',
-            },
-            
-            body: base64ToUint8Array((photo.base64).split(',')[1]) // or binary (Uint8Array)
-          });
+              method: 'POST',
+              headers : {
+                'Content-Type': 'application/octet-stream',
+              },
+              
+              body: base64ToUint8Array(photo.base64)
+            });
+
           const data = await response.json();
           console.log(data)
           setPhotos(data);
@@ -108,10 +121,54 @@ export default function Camera() {
       setFacing(current => (current === 'back'?'front':'back'));
   }
 
+  const handleUploadPhoto = async ()=> {
+      // ask for permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permissionResult.granted === false){
+        alert('Permission to access media library is required');
+        return;
+      }
+
+      // pick image
+
+      const result = await ImagePicker.launchImageLibraryAsync(
+        {
+          mediaTypes: ['images'],
+          quality: 0.80
+        }
+      )
+      // android: uri: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fcam-app-29afd78f-ae6b-42a6-a5e7-5781d541355a/ImagePicker/1bc0ffec-3be6-4c80-b163-da4abcf158a4.jpeg
+      // computer: uri: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHB
+
+      if (!result.canceled){
+
+        setImageUri(result.assets[0].uri); 
+        setPhoto(null)
+        // const response = await fetch(result.assets[0].uri);
+        // // // Here is the significant part 
+        // // // reading the stream as a blob instead of json
+        // //return response.blob();
+
+        // console.log('result = ' + result.assets[0].uri);
+        // setPhoto(result.assets[0].uri);
+
+
+        // let reader = new FileReader();
+        // reader.readAsDataURL(response.blob()); 
+        // // reader.onloadend = function() {
+        // //   let base64data = reader.result;                
+        // //   console.log(base64data);
+        // // }
+
+
+      }
+  }
+
   const handleTakePhoto = async ()=> {
      if (cameraRef.current) {
         const options = {
-            quality: 1,
+            quality: 0.80,
+            
             base64: true,
             exif: false
         };
@@ -120,7 +177,7 @@ export default function Camera() {
 
         setPhoto(takedPhoto);
 
-        
+        setImageUri(null);
     }
   };
 
@@ -140,6 +197,10 @@ export default function Camera() {
   if ( photo) return <PhotoPreviewSection photo={photo} handleRetakePhoto={handleRetakePhoto}
                         searchRWSBoots={searchRWSBoots}></PhotoPreviewSection>
 
+  // if ( imageUri) return <PhotoPreviewImageURLSection imageUri={imageUri} handleRetakePhoto={handleRetakePhoto}
+  //   searchRWSBoots={searchRWSBoots}></PhotoPreviewImageURLSection>
+  
+
   //if (photos) return <BootsImages photos={photos}></BootsImages>
   return (
     <View style={styles.container}>
@@ -154,6 +215,9 @@ export default function Camera() {
             <AntDesign name='camera' size={44} color='black'></AntDesign>
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.button} onPress={handleUploadPhoto}>
+            <AntDesign name='picture' size={44} color='black'></AntDesign>
+          </TouchableOpacity>
 
         </View>
       </CameraView>
