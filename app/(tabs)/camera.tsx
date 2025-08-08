@@ -1,3 +1,4 @@
+import PhotoPreviewImageURLSection from '@/components/PhotoPreviewImageURLSection';
 import PhotoPreviewSection from '@/components/PhotoPreviewSection';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
@@ -14,27 +15,44 @@ export default function Camera() {
   
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading]           = useState(true);
-  const [imageUri, setImageUri] = useState(null);
+  const [imageUri, setImageUri] = useState('');
 
 
   const cameraRef = useRef<CameraView | null>(null);
   
 
   const fetchPhotos = async () => {
+
+    
+    let submitPhoto = null;
     if ( photo != null && photo !== undefined)
+      submitPhoto = photo.base64;
+
+
+    if ( imageUri != null && imageUri !== undefined){
+      console.log("imageUri = " + imageUri?.substring(0,100));
+      submitPhoto = (imageUri?.includes(',') === true)?imageUri.split(',')[1]: imageUri;
+
+    }
+    console.log("submitPhoto = " + submitPhoto?.substring(0,100));
+
+
+    if ( submitPhoto != null && submitPhoto !== undefined)
     {
+          console.log("Call POST  = " + submitPhoto?.substring(0,100));
+
           try{
             
             // android: photo = /9j/4AAQSkZJRgABAQAAAQABAAD/4gIoSUNDX1BST0ZJTEUAAQEAAAIYAAAAAAQwAABtbnRyUkdCIFhZWiAAAAAAAAAAAAAAAABh
 
-            console.log("photo = " + (photo.base64).substring(0,100));
+            console.log("submitPhoto = " + (submitPhoto).substring(0,100));
             //console.log("Base64 =  " + (photo.base64).split(',')[1]);
             //console.log("Bytes = " + Uint8Array.fromBase64(photo.base64));
             //const binaryData = atob(photo.base64); // Decode Base64 to binary
             //const byteArray = new Uint8Array(binaryData.length); // Create binary array
             // Calculate in bytes
-            let sizeInBytes = (photo.base64.length * 3) / 4 
-                              - (photo.base64.endsWith('==') ? 2 : photo.base64.endsWith('=') ? 1 : 0);
+            let sizeInBytes = (submitPhoto.length * 3) / 4 
+                              - (submitPhoto.endsWith('==') ? 2 : submitPhoto.endsWith('=') ? 1 : 0);
 
             console.log("Size : " + sizeInBytes / (1024*1024));
 
@@ -44,7 +62,7 @@ export default function Camera() {
                 'Content-Type': 'application/octet-stream',
               },
               
-              body: base64ToUint8Array(photo.base64)
+              body: base64ToUint8Array(submitPhoto)
             });
 
           const data = await response.json();
@@ -142,23 +160,31 @@ export default function Camera() {
 
       if (!result.canceled){
 
-        setImageUri(result.assets[0].uri); 
-        setPhoto(null)
-        // const response = await fetch(result.assets[0].uri);
-        // // // Here is the significant part 
-        // // // reading the stream as a blob instead of json
-        // //return response.blob();
+        console.log('result = ' + result.assets[0].uri);
 
-        // console.log('result = ' + result.assets[0].uri);
+        const response = (await fetch(result.assets[0].uri));
+        // // Here is the significant part 
+        // // reading the stream as a blob instead of json
+        //return response.blob();
+
+
+        let reader = new FileReader();
+        let blob = await response.blob();
+        await reader.readAsDataURL(blob); 
+        reader.onloadend = function() {
+          let base64data = reader.result;                
+          console.log('base64 = ' + base64data?.substring(0,50));
+
+          setImageUri(base64data); 
+          setPhoto(null)
+        }
+
+        
+        
         // setPhoto(result.assets[0].uri);
 
 
-        // let reader = new FileReader();
-        // reader.readAsDataURL(response.blob()); 
-        // // reader.onloadend = function() {
-        // //   let base64data = reader.result;                
-        // //   console.log(base64data);
-        // // }
+        
 
 
       }
@@ -183,11 +209,13 @@ export default function Camera() {
 
   const handleRetakePhoto = ()=> {
     setPhoto(null);
+    setImageUri(null);
   }
   
 
   const searchRWSBoots = ()=> {
     // here callng API to return list of boots
+    console.log("Call searchRWSBoots");
     DataService.setSharedData('Hello from Service');
     fetchPhotos();
     // setPhotos('Hello');
@@ -197,8 +225,8 @@ export default function Camera() {
   if ( photo) return <PhotoPreviewSection photo={photo} handleRetakePhoto={handleRetakePhoto}
                         searchRWSBoots={searchRWSBoots}></PhotoPreviewSection>
 
-  // if ( imageUri) return <PhotoPreviewImageURLSection imageUri={imageUri} handleRetakePhoto={handleRetakePhoto}
-  //   searchRWSBoots={searchRWSBoots}></PhotoPreviewImageURLSection>
+  if ( imageUri) return <PhotoPreviewImageURLSection imageUri={imageUri} handleRetakePhoto={handleRetakePhoto}
+    searchRWSBoots={searchRWSBoots}></PhotoPreviewImageURLSection>
   
 
   //if (photos) return <BootsImages photos={photos}></BootsImages>
